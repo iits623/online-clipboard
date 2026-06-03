@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.ico">
+    <title>کلیپ بورد آنلاین purple flower</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="bg-blur"></div>
+    <div class="bg-gradient"></div>
+
+    <div class="container view-container">
+      <header>
+        <div class="logo">
+          <p>کلیپ بورد آنلاین purple flower</p>
+        </div>
+        <p class="tagline">متن خود را بنویس، لینک بگیر، به اشتراک بگذار</p>
+      </header>
+
+      <main>
+        <div class="link-input-box">
+          <div class="link-input-wrapper">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+              />
+              <path
+                d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+              />
+            </svg>
+            <input
+              type="text"
+              id="linkInput"
+              placeholder="لینک خود را وارد کنید"
+            />
+          </div>
+          <div class=""></div>
+
+          <div class="view-footer" style="background: none; border: none">
+            <button class="btn-outline" id="fetchBtn">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                />
+              </svg>
+              دریافت متن
+            </button>
+            <a
+              href="index.html"
+              class="btn-outline"
+              style="text-decoration: none"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-7H9v7H5a2 2 0 0 1-2-2z"
+                />
+              </svg>
+              پیست جدید
+            </a>
+          </div>
+        </div>
+
+        <div class="view-card" id="viewCard" style="display: none">
+          <div class="view-header">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <h2>متن پیست</h2>
+          </div>
+          <div class="view-content" id="viewContent">
+            <div
+              class="loading-spinner"
+              id="loadingSpinner"
+              style="display: none"
+            ></div>
+            <pre id="textDisplay"></pre>
+          </div>
+          <div class="view-footer">
+            <button class="btn-primary" id="copyViewBtn">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                />
+              </svg>
+              کپی متن
+            </button>
+            <a
+              href="index.html"
+              class="btn-primary"
+              style="text-decoration: none"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-7H9v7H5a2 2 0 0 1-2-2z"
+                />
+              </svg>
+              پیست جدید
+            </a>
+          </div>
+        </div>
+
+        <div class="error-card" id="errorCard" style="display: none">
+          <div class="error-icon">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h3>خطا</h3>
+          <p id="errorMessage">پیست مورد نظر یافت نشد.</p>
+        </div>
+      </main>
+
+      <footer>
+        <p class="footer-text">
+          ساخته شده با <span>💜</span> توسط
+          <a
+            href="https://pentify.ir/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >آکادمی پنتیفای</a
+          >
+        </p>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/view.js"></script>
+  </body>
+</html>

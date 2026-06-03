@@ -1,0 +1,141 @@
+const SUPABASE_URL = "https://kuqmmwpwnekyqjgxuwof.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_zVQdcxaM-HKHQ10kqx4Myw_j9C-TiwI";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const textarea = document.getElementById("pasteContent");
+const saveBtn = document.getElementById("saveBtn");
+const clearBtn = document.getElementById("clearBtn");
+const copyLinkBtn = document.getElementById("copyLinkBtn");
+const resultArea = document.getElementById("resultArea");
+const shareLinkInput = document.getElementById("shareLink");
+
+clearBtn.addEventListener("click", () => {
+  textarea.value = "";
+  textarea.focus();
+  resultArea.style.display = "none";
+});
+
+function generateId() {
+  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+}
+
+async function saveToSupabase(id, content) {
+  const { error } = await sb
+    .from("online-clipboard")
+    .insert([{ paste_id: id, content: content }]);
+  if (error) return false;
+  return true;
+}
+
+function showShareLink(id) {
+  const viewUrl = `${window.location.origin}/view.html?id=${id}`;
+  shareLinkInput.value = viewUrl;
+  resultArea.style.display = "block";
+  resultArea.scrollIntoView({ behavior: "smooth" });
+}
+
+saveBtn.addEventListener("click", async () => {
+  const content = textarea.value;
+
+  if (!content || content.trim() === "") {
+    saveBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      لطفاً متنی بنویسید!
+    `;
+    return;
+  }
+
+  const originalHTML = saveBtn.innerHTML;
+
+  saveBtn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-spinner">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 2a10 10 0 1 0 10 10"/>
+    </svg>
+    در حال ذخیره سازی...
+  `;
+  saveBtn.disabled = true;
+
+  const id = generateId();
+  const saved = await saveToSupabase(id, content);
+
+  if (saved) {
+    showShareLink(id);
+    saveBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      پیست شما با موفقیت ساخته شد!
+    `;
+  } else {
+    saveBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      خطا در ذخیره سازی!
+    `;
+  }
+
+  saveBtn.disabled = false;
+
+  setTimeout(() => {
+    saveBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+      </svg>
+      ایجاد پیست
+    `;
+  }, 3000);
+});
+
+copyLinkBtn.addEventListener("click", async () => {
+  if (!shareLinkInput.value) {
+    copyLinkBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      لینکی برای کپی وجود ندارد!
+    `;
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareLinkInput.value);
+    copyLinkBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      لینک با موفقیت کپی شد!
+    `;
+    setTimeout(() => {
+      copyLinkBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        کپی لینک
+      `;
+    }, 3000);
+  } catch (err) {
+    copyLinkBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      کپی نشد. دستی کپی کنید.
+    `;
+  }
+});
