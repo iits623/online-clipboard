@@ -10,6 +10,7 @@ const resultArea = document.getElementById("resultArea");
 const shareLinkInput = document.getElementById("shareLink");
 const expireDateInput = document.getElementById("expireDate");
 const expireTimeInput = document.getElementById("expireTime");
+const maxViewsInput = document.getElementById("maxViews");
 
 clearBtn.addEventListener("click", () => {
   textarea.value = "";
@@ -31,6 +32,57 @@ function generateUniqueId() {
   return generateShortId();
 }
 
+function convertPersianToEnglishNumber(input) {
+  const persianNumbers = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+  const englishNumbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  let result = input;
+  for (let i = 0; i < persianNumbers.length; i++) {
+    result = result.split(persianNumbers[i]).join(englishNumbers[i]);
+  }
+  return result;
+}
+
+function convertPersianToGregorian(persianDateStr, timeStr) {
+  if (!persianDateStr || !timeStr) return null;
+
+  const englishDateStr = convertPersianToEnglishNumber(persianDateStr);
+
+  try {
+    const dateParts = englishDateStr.split("/");
+    if (dateParts.length !== 3) return null;
+
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]);
+    const day = parseInt(dateParts[2]);
+
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+
+    const persianDateObj = new persianDate([year, month, day]);
+    const gregorianDate = persianDateObj.toDate();
+
+    if (isNaN(gregorianDate.getTime())) return null;
+
+    const timeParts = timeStr.split(":");
+    let hour = 23;
+    let minute = 59;
+
+    if (timeParts.length >= 2) {
+      hour = parseInt(timeParts[0]);
+      minute = parseInt(timeParts[1]);
+    }
+
+    if (isNaN(hour)) hour = 23;
+    if (isNaN(minute)) minute = 59;
+
+    gregorianDate.setHours(hour, minute, 0, 0);
+
+    return gregorianDate.toISOString();
+  } catch (error) {
+    console.error("Error converting date:", error);
+    return null;
+  }
+}
+
 async function saveToSupabase(id, content, expiresAt, maxViews) {
   const { error } = await sb.from("online-clipboard").insert([
     {
@@ -41,62 +93,60 @@ async function saveToSupabase(id, content, expiresAt, maxViews) {
       views: 0,
     },
   ]);
-  if (error) return false;
+  if (error) {
+    console.error("Supabase error:", error);
+    return false;
+  }
   return true;
 }
 
 function showShareLink(id) {
-  const viewUrl = `${window.location.origin}/view.html?id=${id}`;
+  const viewUrl = `${window.location.origin}${window.location.pathname.replace("index.html", "")}view.html?id=${id}`;
   shareLinkInput.value = viewUrl;
   resultArea.style.display = "block";
   resultArea.scrollIntoView({ behavior: "smooth" });
 }
 
-function persianDateTimeToGregorian(persianDate, persianTime) {
-  if (!persianDate || persianDate.trim() === "") return null;
+function resetSaveButton() {
+  saveBtn.disabled = false;
+  saveBtn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/>
+      <polyline points="7 3 7 8 15 8"/>
+    </svg>
+    ایجاد پیست
+  `;
+}
 
-  const dateParts = persianDate.split("/");
-  if (dateParts.length !== 3) return null;
-
-  const year = parseInt(dateParts[0]);
-  const month = parseInt(dateParts[1]);
-  const day = parseInt(dateParts[2]);
-
-  let hour = 23;
-  let minute = 59;
-  let second = 59;
-
-  if (persianTime && persianTime.trim() !== "") {
-    const timeParts = persianTime.split(":");
-    if (timeParts.length >= 2) {
-      hour = parseInt(timeParts[0]);
-      minute = parseInt(timeParts[1]);
-      second = timeParts[2] ? parseInt(timeParts[2]) : 0;
+function showError(message) {
+  saveBtn.disabled = false;
+  saveBtn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    ${message}
+  `;
+  setTimeout(() => {
+    if (
+      saveBtn.innerHTML.includes("خطا") ||
+      saveBtn.innerHTML.includes("لطفاً")
+    ) {
+      resetSaveButton();
     }
-  }
-
-  let gregorianDate = new Date();
-  gregorianDate.setFullYear(year, month - 1, day);
-  gregorianDate.setHours(hour, minute, second, 999);
-
-  return gregorianDate.toISOString();
+  }, 3000);
 }
 
-if (expireTimeInput && !expireTimeInput.value) {
-  expireTimeInput.value = "";
-}
+$(document).ready(function () {
+  if (expireDateInput) {
+    expireDateInput.value = "";
 
-if (expireDateInput) {
-  $(document).ready(function () {
     $(expireDateInput).persianDatepicker({
-      observer: true,
       format: "YYYY/MM/DD",
       autoClose: true,
-      initialValue: false,
       toolbox: {
-        calendarSwitch: {
-          enabled: false,
-        },
         todayButton: {
           enabled: true,
           text: "امروز",
@@ -104,43 +154,55 @@ if (expireDateInput) {
       },
       persianDigits: true,
       zIndex: 10000,
-      onSelect: function () {
-        setTimeout(() => {
-          if (expireTimeInput) expireTimeInput.focus();
-        }, 100);
-      },
+      initialValue: false,
     });
-  });
-}
+
+    $(expireDateInput).off("click");
+    $(expireDateInput).on("click", function (e) {
+      e.stopPropagation();
+      $(this).persianDatepicker("show");
+    });
+  }
+});
 
 saveBtn.addEventListener("click", async () => {
   const content = textarea.value;
 
   if (!content || content.trim() === "") {
-    saveBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      لطفاً متنی بنویسید!
-    `;
+    showError("لطفاً متنی بنویسید!");
+    return;
+  }
+
+  const expireDate = expireDateInput?.value;
+  const expireTime = expireTimeInput?.value;
+  const maxViews = maxViewsInput?.value;
+
+  const hasDate = expireDate && expireDate.trim() !== "";
+  const hasTime = expireTime && expireTime.trim() !== "";
+
+
+  if ((hasDate && !hasTime) || (!hasDate && hasTime)) {
+    if (hasDate && !hasTime) {
+      showError("برای فعال کردن انقضا، ساعت را نیز وارد کنید!");
+      expireTimeInput.focus();
+    } else if (!hasDate && hasTime) {
+      showError("برای فعال کردن انقضا، تاریخ را نیز انتخاب کنید!");
+      expireDateInput.focus();
+    }
     return;
   }
 
   let expiresAt = null;
-  const expireDateValue = expireDateInput?.value;
-  const expireTimeValue = expireTimeInput?.value;
 
-  if (expireDateValue && expireDateValue.trim() !== "") {
-    const finalTime =
-      expireTimeValue && expireTimeValue.trim() !== ""
-        ? expireTimeValue
-        : "23:59";
-    expiresAt = persianDateTimeToGregorian(expireDateValue, finalTime);
+  if (hasDate && hasTime) {
+    expiresAt = convertPersianToGregorian(expireDate, expireTime);
+    if (!expiresAt) {
+      showError("تاریخ یا ساعت معتبر نیست!");
+      return;
+    }
   }
 
-  const maxViews = document.getElementById("maxViews").value;
+
   const finalMaxViews = maxViews ? parseInt(maxViews) : null;
 
   saveBtn.innerHTML = `
@@ -162,72 +224,64 @@ saveBtn.addEventListener("click", async () => {
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
         <polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
-      پیست شما با موفقیت ساخته شد!
+      پیست شما ساخته شد!
     `;
+    setTimeout(() => {
+      resetSaveButton();
+    }, 3000);
+
+    expireDateInput.value = "";
+    expireTimeInput.value = "";
+    maxViewsInput.value = "";
   } else {
-    saveBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      خطا در ذخیره سازی!
-    `;
+    showError("خطا در ذخیره سازی!");
   }
 
   saveBtn.disabled = false;
-
-  setTimeout(() => {
-    saveBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
-      </svg>
-      ایجاد پیست
-    `;
-  }, 3000);
 });
 
 copyLinkBtn.addEventListener("click", async () => {
   if (!shareLinkInput.value) {
+    const original = copyLinkBtn.innerHTML;
     copyLinkBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="8" x2="12" y2="12"/>
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
-      لینکی برای کپی وجود ندارد!
+      لینکی نیست!
     `;
+    setTimeout(() => {
+      copyLinkBtn.innerHTML = original;
+    }, 2000);
     return;
   }
 
   try {
     await navigator.clipboard.writeText(shareLinkInput.value);
+    const original = copyLinkBtn.innerHTML;
     copyLinkBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
         <polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
-      لینک با موفقیت کپی شد!
+      کپی شد!
     `;
     setTimeout(() => {
-      copyLinkBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-        </svg>
-        کپی لینک
-      `;
-    }, 3000);
+      copyLinkBtn.innerHTML = original;
+    }, 2000);
   } catch (err) {
+    const original = copyLinkBtn.innerHTML;
     copyLinkBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="8" x2="12" y2="12"/>
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
-      کپی نشد. دستی کپی کنید.
+      کپی نشد
     `;
+    setTimeout(() => {
+      copyLinkBtn.innerHTML = original;
+    }, 2000);
   }
 });

@@ -12,7 +12,6 @@ const copyViewBtn = document.getElementById("copyViewBtn");
 const errorMessage = document.getElementById("errorMessage");
 
 let currentContent = "";
-let currentId = "";
 
 function extractIdFromLink(link) {
   if (link.includes("?id=")) {
@@ -53,18 +52,36 @@ function showLoading() {
   errorCard.style.display = "none";
 }
 
+function resetFetchButton() {
+  fetchBtn.disabled = false;
+  fetchBtn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    دریافت متن
+  `;
+}
+
+function showFetchError(message) {
+  fetchBtn.disabled = false;
+  fetchBtn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    ${message}
+  `;
+  setTimeout(() => {
+    resetFetchButton();
+  }, 3000);
+}
+
 async function fetchAndDisplay() {
   const inputValue = linkInput.value.trim();
 
   if (!inputValue) {
-    fetchBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      لطفا لینک خود را وارد کنید!
-    `;
+    showFetchError("لطفا لینک خود را وارد کنید!");
     return;
   }
 
@@ -82,15 +99,7 @@ async function fetchAndDisplay() {
 
   if (!id) {
     loadingSpinner.style.display = "none";
-    fetchBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      لینک نامعتبر است!
-    `;
-    fetchBtn.disabled = false;
+    showFetchError("لینک نامعتبر است!");
     errorMessage.innerHTML = "لینک وارد شده معتبر نیست.";
     errorCard.style.display = "block";
     return;
@@ -100,45 +109,26 @@ async function fetchAndDisplay() {
   loadingSpinner.style.display = "none";
 
   if (!paste) {
-    fetchBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      پیست پیدا نشد!
-    `;
-    fetchBtn.disabled = false;
+    showFetchError("پیست پیدا نشد!");
     errorMessage.innerHTML = "پیست مورد نظر یافت نشد.";
     errorCard.style.display = "block";
     return;
   }
 
-  if (paste.expires_at && new Date(paste.expires_at) < new Date()) {
-    fetchBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      پیست منقضی شده است!
-    `;
-    fetchBtn.disabled = false;
-    errorMessage.innerHTML = "این پیست منقضی شده است.";
-    errorCard.style.display = "block";
-    return;
+  if (paste.expires_at && paste.expires_at !== null) {
+    const expiryDate = new Date(paste.expires_at);
+    const now = new Date();
+
+    if (expiryDate < now) {
+      showFetchError("این پیست منقضی شده است!");
+      errorMessage.innerHTML = "این پیست منقضی شده است.";
+      errorCard.style.display = "block";
+      return;
+    }
   }
 
   if (paste.max_views && paste.views >= paste.max_views) {
-    fetchBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      محدودیت بازدید رد شده است!
-    `;
-    fetchBtn.disabled = false;
+    showFetchError("محدودیت بازدید رد شده است!");
     errorMessage.innerHTML = "این پیست به حداکثر بازدید مجاز رسیده است.";
     errorCard.style.display = "block";
     return;
@@ -158,30 +148,30 @@ async function fetchAndDisplay() {
   linkInput.value = "";
 
   setTimeout(() => {
-    fetchBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-      دریافت متن
-    `;
+    resetFetchButton();
   }, 3000);
 }
 
 copyViewBtn.addEventListener("click", async () => {
   if (!currentContent) {
+    const original = copyViewBtn.innerHTML;
     copyViewBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="8" x2="12" y2="12"/>
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
-      متنی برای کپی نیست!
+      متنی نیست!
     `;
+    setTimeout(() => {
+      copyViewBtn.innerHTML = original;
+    }, 2000);
     return;
   }
 
   try {
     await navigator.clipboard.writeText(currentContent);
+    const original = copyViewBtn.innerHTML;
     copyViewBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
@@ -190,15 +180,10 @@ copyViewBtn.addEventListener("click", async () => {
       کپی شد!
     `;
     setTimeout(() => {
-      copyViewBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-        </svg>
-        کپی متن
-      `;
-    }, 3000);
+      copyViewBtn.innerHTML = original;
+    }, 2000);
   } catch (err) {
+    const original = copyViewBtn.innerHTML;
     copyViewBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
@@ -207,6 +192,9 @@ copyViewBtn.addEventListener("click", async () => {
       </svg>
       کپی نشد
     `;
+    setTimeout(() => {
+      copyViewBtn.innerHTML = original;
+    }, 2000);
   }
 });
 

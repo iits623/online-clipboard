@@ -56,58 +56,40 @@
 
         <div class="options-panel">
           <div class="option-item">
-            <label class="expire-label">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+            <div class="expire-group">
+              <div class="expire-row">
+                <span class="expire-separator">تاریخ</span>
+                <input
+                  type="text"
+                  id="expireDate"
+                  class="date-input"
+                  placeholder="انتخاب تاریخ"
+                  readonly
+                />
+                <span class="expire-separator">ساعت</span>
+                <input type="time" id="expireTime" class="time-input" />
+              </div>
+              <small class="expire-hint" id="expireHint"
+                >برای فعال کردن انقضا، هم تاریخ و هم ساعت را وارد کنید.</small
               >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              <input
-                type="text"
-                id="expireDate"
-                class="date-input"
-                placeholder="1402/01/01"
-                readonly
-                style="width: 140px;color:white"
-              />
-              <input
-                type="time"
-                id="expireTime"
-                class="time-input"
-                style="width: 150px"
-              />
-              <span class="label-text">انقضا (اختیاری)</span>
-            </label>
+            </div>
           </div>
-          <div class="option-item">
-            <label class="expire-label">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <input
-                type="number"
-                id="maxViews"
-                min="1"
-                max="1000"
-                class="number-input"
-                style="width: 100px"
-              />
-              <span class="label-text">محدودیت بازدید (اختیاری)</span>
-            </label>
+
+          <div class="option-item" style="height: 100%">
+            <div class="expire-group">
+              <div class="expire-row">
+                <span class="expire-separator">تعداد بازدید</span>
+                <input
+                  type="number"
+                  id="maxViews"
+                  class="number-input"
+                  placeholder="مثال: ۱۰۰"
+                  min="1"
+                  max="1000"
+                />
+              </div>
+              <small class="expire-hint"></small>
+            </div>
           </div>
         </div>
 
@@ -195,9 +177,7 @@
     <script src="./assets/JS/jquery.min.js"></script>
     <script src="./assets/JS/persian-date.min.js"></script>
     <script src="./assets/JS/persian-datepicker.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script src="./assets/JS/script.js"></script>
   </body>
 </html>
