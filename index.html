@@ -4,8 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>کلیپ بورد آنلاین purple flower</title>
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.ico" />
-    <link rel="stylesheet" href="assets/style.css" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.ico">
+    <link rel="stylesheet" href="./assets/CSS/style.css" />
+    <link
+      rel="stylesheet"
+      href="./assets/CSS/persian-datepicker.min.css"
+    />
   </head>
   <body>
     <div class="bg-blur"></div>
@@ -53,6 +57,65 @@
           ></textarea>
         </div>
 
+        <div class="options-panel">
+          <div class="option-item">
+            <label class="expire-label">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <input
+                type="text"
+                id="expireDate"
+                class="date-input"
+                placeholder="انتخاب تاریخ"
+                readonly
+                style="width: 130px"
+              />
+              <input
+                type="text"
+                id="expireTime"
+                class="time-input"
+                placeholder="ساعت"
+                value="23:59"
+                style="width: 80px"
+              />
+              <span>انقضا</span>
+            </label>
+          </div>
+          <div class="option-item">
+            <label class="expire-label">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <input
+                type="number"
+                id="maxViews"
+                placeholder="محدودیت"
+                min="1"
+                max="1000"
+                class="number-input"
+              />
+              <span>بازدید</span>
+            </label>
+          </div>
+        </div>
+
         <div class="action-buttons">
           <button class="btn-outline" id="saveBtn">
             <svg
@@ -71,7 +134,7 @@
             </svg>
             ایجاد پیست
           </button>
-          <a href="view.html" class="btn-outline">
+          <a href="./view.html" class="btn-outline">
             <svg
               width="18"
               height="18"
@@ -134,7 +197,12 @@
       </footer>
     </div>
 
+    <script src="./assets/JS/jquery.min.js"></script>
+    <script src="./assets/JS/persian-date.min.js"></script>
+    <script src="./assets/JS/persian-datepicker.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./assets/script.js"></script>
+
+    <script src="./assets/JS/script.js"></script>
   </body>
 </html>

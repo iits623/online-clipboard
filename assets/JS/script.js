@@ -8,6 +8,8 @@ const clearBtn = document.getElementById("clearBtn");
 const copyLinkBtn = document.getElementById("copyLinkBtn");
 const resultArea = document.getElementById("resultArea");
 const shareLinkInput = document.getElementById("shareLink");
+const expireDateInput = document.getElementById("expireDate");
+const expireTimeInput = document.getElementById("expireTime");
 
 clearBtn.addEventListener("click", () => {
   textarea.value = "";
@@ -15,14 +17,30 @@ clearBtn.addEventListener("click", () => {
   resultArea.style.display = "none";
 });
 
-function generateId() {
-  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+function generateShortId() {
+  const chars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
-async function saveToSupabase(id, content) {
-  const { error } = await sb
-    .from("online-clipboard")
-    .insert([{ paste_id: id, content: content }]);
+function generateUniqueId() {
+  return generateShortId();
+}
+
+async function saveToSupabase(id, content, expiresAt, maxViews) {
+  const { error } = await sb.from("online-clipboard").insert([
+    {
+      paste_id: id,
+      content: content,
+      expires_at: expiresAt,
+      max_views: maxViews,
+      views: 0,
+    },
+  ]);
   if (error) return false;
   return true;
 }
@@ -32,6 +50,67 @@ function showShareLink(id) {
   shareLinkInput.value = viewUrl;
   resultArea.style.display = "block";
   resultArea.scrollIntoView({ behavior: "smooth" });
+}
+
+function persianDateTimeToGregorian(persianDate, persianTime) {
+  if (!persianDate || persianDate.trim() === "") return null;
+
+  const dateParts = persianDate.split("/");
+  if (dateParts.length !== 3) return null;
+
+  const year = parseInt(dateParts[0]);
+  const month = parseInt(dateParts[1]);
+  const day = parseInt(dateParts[2]);
+
+  let hour = 23;
+  let minute = 59;
+  let second = 59;
+
+  if (persianTime && persianTime.trim() !== "") {
+    const timeParts = persianTime.split(":");
+    if (timeParts.length >= 2) {
+      hour = parseInt(timeParts[0]);
+      minute = parseInt(timeParts[1]);
+      second = timeParts[2] ? parseInt(timeParts[2]) : 0;
+    }
+  }
+
+  let gregorianDate = new Date();
+  gregorianDate.setFullYear(year, month - 1, day);
+  gregorianDate.setHours(hour, minute, second, 999);
+
+  return gregorianDate.toISOString();
+}
+
+if (expireTimeInput && !expireTimeInput.value) {
+  expireTimeInput.value = "23:59";
+}
+
+if (expireDateInput) {
+  $(document).ready(function () {
+    $(expireDateInput).persianDatepicker({
+      observer: true,
+      format: "YYYY/MM/DD",
+      autoClose: true,
+      initialValue: false,
+      toolbox: {
+        calendarSwitch: {
+          enabled: false,
+        },
+        todayButton: {
+          enabled: true,
+          text: "امروز",
+        },
+      },
+      persianDigits: true,
+      zIndex: 10000,
+      onSelect: function () {
+        setTimeout(() => {
+          if (expireTimeInput) expireTimeInput.focus();
+        }, 100);
+      },
+    });
+  });
 }
 
 saveBtn.addEventListener("click", async () => {
@@ -49,7 +128,16 @@ saveBtn.addEventListener("click", async () => {
     return;
   }
 
-  const originalHTML = saveBtn.innerHTML;
+  let expiresAt = null;
+  const expireDateValue = expireDateInput?.value;
+  const expireTimeValue = expireTimeInput?.value;
+
+  if (expireDateValue && expireDateValue.trim() !== "") {
+    expiresAt = persianDateTimeToGregorian(expireDateValue, expireTimeValue);
+  }
+
+  const maxViews = document.getElementById("maxViews").value;
+  const finalMaxViews = maxViews ? parseInt(maxViews) : null;
 
   saveBtn.innerHTML = `
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-spinner">
@@ -60,8 +148,8 @@ saveBtn.addEventListener("click", async () => {
   `;
   saveBtn.disabled = true;
 
-  const id = generateId();
-  const saved = await saveToSupabase(id, content);
+  const id = generateUniqueId();
+  const saved = await saveToSupabase(id, content, expiresAt, finalMaxViews);
 
   if (saved) {
     showShareLink(id);

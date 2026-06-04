@@ -12,6 +12,7 @@ const copyViewBtn = document.getElementById("copyViewBtn");
 const errorMessage = document.getElementById("errorMessage");
 
 let currentContent = "";
+let currentId = "";
 
 function extractIdFromLink(link) {
   if (link.includes("?id=")) {
@@ -24,11 +25,19 @@ function extractIdFromLink(link) {
 async function loadPasteById(id) {
   const { data, error } = await sb
     .from("online-clipboard")
-    .select("paste_id, content")
+    .select("paste_id, content, expires_at, max_views, views")
     .eq("paste_id", id)
     .single();
   if (error) return null;
   return data;
+}
+
+async function updateViews(id, currentViews) {
+  const { error } = await sb
+    .from("online-clipboard")
+    .update({ views: currentViews + 1 })
+    .eq("paste_id", id);
+  if (error) console.error("خطا در بروزرسانی بازدید:", error);
 }
 
 function displayPaste(paste) {
@@ -104,6 +113,38 @@ async function fetchAndDisplay() {
     errorCard.style.display = "block";
     return;
   }
+
+  if (paste.expires_at && new Date(paste.expires_at) < new Date()) {
+    fetchBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      پیست منقضی شده است!
+    `;
+    fetchBtn.disabled = false;
+    errorMessage.innerHTML = "این پیست منقضی شده است.";
+    errorCard.style.display = "block";
+    return;
+  }
+
+  if (paste.max_views && paste.views >= paste.max_views) {
+    fetchBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      محدودیت بازدید رد شده است!
+    `;
+    fetchBtn.disabled = false;
+    errorMessage.innerHTML = "این پیست به حداکثر بازدید مجاز رسیده است.";
+    errorCard.style.display = "block";
+    return;
+  }
+
+  await updateViews(id, paste.views);
 
   fetchBtn.innerHTML = `
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
