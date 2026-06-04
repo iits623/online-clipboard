@@ -600,11 +600,9 @@ footer {
 
 .time-input {
   direction: ltr;
-  font-family: monospace;
   letter-spacing: 2px;
 }
 
-/* استایل‌های تقویم شمسی */
 .persian-datepicker {
   background: var(--bg-card) !important;
   border: 1px solid var(--border) !important;

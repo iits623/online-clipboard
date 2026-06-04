@@ -83,7 +83,7 @@ function persianDateTimeToGregorian(persianDate, persianTime) {
 }
 
 if (expireTimeInput && !expireTimeInput.value) {
-  expireTimeInput.value = "23:59";
+  expireTimeInput.value = "";
 }
 
 if (expireDateInput) {
@@ -133,7 +133,11 @@ saveBtn.addEventListener("click", async () => {
   const expireTimeValue = expireTimeInput?.value;
 
   if (expireDateValue && expireDateValue.trim() !== "") {
-    expiresAt = persianDateTimeToGregorian(expireDateValue, expireTimeValue);
+    const finalTime =
+      expireTimeValue && expireTimeValue.trim() !== ""
+        ? expireTimeValue
+        : "23:59";
+    expiresAt = persianDateTimeToGregorian(expireDateValue, finalTime);
   }
 
   const maxViews = document.getElementById("maxViews").value;
